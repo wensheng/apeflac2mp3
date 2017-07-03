@@ -21,20 +21,20 @@ cfg = ConfigParser()
 cfg.read(os.path.join(os.path.realpath(os.path.dirname(__file__)), 'config.ini'))
 
 ffmpeg_path = cfg.get(sname, "ffmpeg")
+supported_exts = ("flac", "ape")
 
 
-def parse_cue(cue_file):
+def parse_cue(cue_file, outdir):
     """
     from:https://gist.github.com/bancek/b37b780292540ed2d17d
-    parse cue file and return the ffmpeg cmd list
+    Parse cue file and return the ffmpeg cmd list
+    Note this assumes cue file and pointed FILE are always in the same directory
     """
     cue_dir = os.path.dirname(cue_file)
     d = open(cue_file).read().splitlines()
     
     general = {}
-    
     tracks = []
-    
     current_file = None
     
     for line in d:
@@ -90,10 +90,10 @@ def parse_cue(cue_file):
             cmd += ' -t %.2d:%.2d:%.2d' % (track['duration'] / 60 / 60, track['duration'] / 60 % 60, int(track['duration'] % 60))
     
         cmd += ' ' + ' '.join('-metadata %s="%s"' % (k, v) for (k, v) in metadata.items())
-        #cmd += ' "%.2d.mp3"' % (track['track'])
-        cmd += ' "%.2d-%s-%s.mp3"' % (track['track'],
+        filename = '%.2d-%s-%s.mp3' % (track['track'],
                                       track['artist'].replace(":", "-"),
                                       track['title'].replace(":", "-"))
+        cmd += ' "%s"' % os.path.join(outdir, filename)
     
         cmds.append(cmd)
 
@@ -101,13 +101,16 @@ def parse_cue(cue_file):
 
 
 def process_cue(incue, outdir):
-    cmds = parse_cue(sys.argv[1])
+    cmds = parse_cue(incue, outdir)
     for cmd in cmds:
         print(cmd)
         os.system(cmd)
 
 
 def process_onefile(infile, outdir):
+    """
+    convert a single file to mp3
+    """
     filename = os.path.basename(infile)
     name, ext = os.path.splitext(filename)
     cmd = '%s -i "%s"' % (ffmpeg_path, infile)
@@ -117,8 +120,21 @@ def process_onefile(infile, outdir):
 
 
 def process_dir(indir, outdir):
-    raise NotImplementedError
-
+    """
+    Recursively go through directory.
+    If it find cue files, it will process them.
+    Otherwise it will convert files of known formats (supported_exts) to mp3
+    """
+    for root, dirs, files in os.walk(indir):
+        cues = [f for f in files if f.endswith(".cue")]
+        if cues:
+            for cue in cues:
+                process_cue(os.path.join(root, cue), outdir)
+        else:
+            for f in files:
+                name, ext = os.path.splitext(f)
+                if ext in supported_exts:
+                    process_onefile(os.path.join(root, f), outdir)
 
 
 if "__main__" == __name__:
