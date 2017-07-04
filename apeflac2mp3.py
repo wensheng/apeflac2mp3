@@ -21,7 +21,7 @@ cfg = ConfigParser()
 cfg.read(os.path.join(os.path.realpath(os.path.dirname(__file__)), 'config.ini'))
 
 ffmpeg_path = cfg.get(sname, "ffmpeg")
-supported_exts = ("flac", "ape")
+supported_exts = ("flac", "ape", "m4a", "oga")
 
 
 def parse_cue(cue_file, outdir):

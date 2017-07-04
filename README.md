@@ -17,3 +17,5 @@ You can also specify one CUE file or one music file as input.
     python apeflac2mpe.py example2.flac
     
 If you omit the dest_dir, it put output files in the current directory.
+
+Note the name says ape and flac, but it can convert any audio formats (such as m4a, oga) as long as ffmpeg support them.
