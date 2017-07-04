@@ -90,9 +90,9 @@ def parse_cue(cue_file, outdir):
             cmd += ' -t %.2d:%.2d:%.2d' % (track['duration'] / 60 / 60, track['duration'] / 60 % 60, int(track['duration'] % 60))
     
         cmd += ' ' + ' '.join('-metadata %s="%s"' % (k, v) for (k, v) in metadata.items())
-        filename = '%.2d-%s-%s.mp3' % (track['track'],
-                                      track['artist'].replace(":", "-"),
-                                      track['title'].replace(":", "-"))
+        filename = '%s-%s-%.2d.mp3' % (track['artist'].replace(":", "-"),
+                                       track['title'].replace(":", "-"),
+                                       track['track'])
         cmd += ' "%s"' % os.path.join(outdir, filename)
     
         cmds.append(cmd)
