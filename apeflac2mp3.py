@@ -22,6 +22,8 @@ cfg.read(os.path.join(os.path.realpath(os.path.dirname(__file__)), 'config.ini')
 
 ffmpeg_path = cfg.get(sname, "ffmpeg")
 supported_exts = ("flac", "ape", "m4a", "oga")
+# ffmpeg args
+bitrate = cfg.get('options', 'bitrate')
 
 
 def parse_cue(cue_file, outdir):
@@ -76,7 +78,7 @@ def parse_cue(cue_file, outdir):
             'album': track['album'],
             'track': str(track['track']) + '/' + str(len(tracks))
         }
-    
+
         if 'genre' in track:
             metadata['genre'] = track['genre']
         if 'date' in track:
@@ -85,11 +87,12 @@ def parse_cue(cue_file, outdir):
         cmd = ffmpeg_path
         cmd += ' -i "%s"' % os.path.join(cue_dir,current_file)
         cmd += ' -ss %.2d:%.2d:%.2d' % (track['start'] / 60 / 60, track['start'] / 60 % 60, int(track['start'] % 60))
-    
+
         if 'duration' in track:
             cmd += ' -t %.2d:%.2d:%.2d' % (track['duration'] / 60 / 60, track['duration'] / 60 % 60, int(track['duration'] % 60))
-    
+
         cmd += ' ' + ' '.join('-metadata %s="%s"' % (k, v) for (k, v) in metadata.items())
+        cmd += ' -ab %s' % bitrate
         filename = '%s-%s-%.2d.mp3' % (track['artist'].replace(":", "-"),
                                        track['title'].replace(":", "-"),
                                        track['track'])
