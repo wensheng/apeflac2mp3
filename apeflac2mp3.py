@@ -3,10 +3,11 @@
 import sys
 import os
 import platform
-if sys.version_info[0] != 3:
-    exit("Only Python 3 supported")
+import argparse
 from configparser import ConfigParser
 
+if sys.version_info[0] != 3:
+    exit("Only Python 3 supported")
 system = platform.system()
 if system == 'Windows':
     sname = 'win'
@@ -141,16 +142,36 @@ def process_dir(indir, outdir):
 
 
 if "__main__" == __name__:
-    indirfile = sys.argv[1]
-    if len(sys.argv) > 2:
-        outdir = sys.argv[2]
-        os.makedirs(outdir, exist_ok=True)
-    else:
-        outdir = ""
+    se = supported_exts
+    se.insert(len(supported_exts) - 1, 'and')
+    se = ', '.join(se).replace('and,', 'and')
+    parser = argparse.ArgumentParser(
+        'apeflac2mp3.py'
+    )
+    parser.add_argument('input', help='the directory or file to process')
+    parser.add_argument('outdir', nargs='?', help='the output directory')
+    parser.add_argument('-b', '--bitrate', dest='bitrate',
+                        help='The bitrate of the mp3 files. Default = 320k')
+    args = parser.parse_args()
 
-    if os.path.isdir(indirfile):
-        process_dir(indirfile, outdir)
-    elif indirfile.endswith(".cue"):
-        process_cue(indirfile, outdir)
+    if args.bitrate:
+        minb = 65
+        maxb = 640
+        if not args.bitrate.endswith('k'):
+            sys.exit('Invalid bitrate %s. Example of valid bitrate: 320k'
+                     % args.bitrate)
+        if not minb <= int(args.bitrate[:-1]) <= maxb:
+            sys.exit('Bitrate must be at least %sk and at most %sk.'
+                     % (minb, maxb))
+        else:
+            bitrate = args.bitrate
+
+    if not args.outdir:
+        args.outdir = os.getcwd()
+
+    if os.path.isdir(args.input):
+        process_dir(args.input, args.outdir, args.same_dir)
+    elif args.input.endswith('.cue'):
+        process_cue(args.input, args.outdir)
     else:
-        process_onefile(indirfile, outdir)
+        process_onefile(args.input, args.outdir)
