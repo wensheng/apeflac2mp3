@@ -195,7 +195,6 @@ def process_dir(indir, outdir, same_dir=False):
 
     if not same_dir:
         if not os.path.exists(outdir):
-            validate_path(outdir, True)
             try_mkdir(outdir)
         outbasedir = os.path.basename(outdir)
         if basedir != outbasedir:
